@@ -111,3 +111,72 @@ A really helpful resource for doing this project and creating smooth trajectorie
 3. Shifting will only be decided if there is enough room behind and in front of the car in the new lane. Note: shifting is an atomic decision (i.e. after deciding to shift to a new lane, we will not think about shifting again till we arive to the new lane. This is done to avoid hanging between lanes)
 4. Decide whether to accelerate or decelerate according to the current speed and the nearness of cars
 5. Generate the next path given the previous path and new points (predicted) using spline function for smoothness
+
+## Rubric items
+
+Items in [rubric](https://review.udacity.com/#!/rubrics/1020/view) are met:
+
+1. Code compilation: I compiled the code using VS2017 but I did not change anything related to make or cmake so it should compile normally
+
+2. "The car is able to drive at least 4.32 miles without incident.": refer to `img` folder, car was able to drive for > 20 mins (then I stopped the simulator)
+
+3. "The car drives according to the speed limit": yes. Car tries to accelerate to reach the speed limit of 50mph as much as possible:
+```
+	/*** Avoiding Jerk ***/
+	// IF the car is too close: decelerate
+	if (tooClose)
+		ref_vel -= MAXIMUM_ACCELERATION; // 5m/s2
+	// ELSE IF target speed is not reached: accelerate
+	else if (ref_vel < TARGET_SPEED)
+		ref_vel += MAXIMUM_ACCELERATION; // 5m/s2
+```
+Note: 
+```
+// Target speed (in mph)
+#define TARGET_SPEED 49.5
+```
+
+4. "Max Acceleration and Jerk are not Exceeded.": yes, the car always accelerates or decelerates slowly
+```
+// Maximum acceleration (in m/s2)
+#define MAXIMUM_ACCELERATION 0.224
+```
+
+5. "Car does not have collisions.": yes ... refer to the logic for determining `tooClose` whether a car is close or not. If a car is close within a good distance, deceleration is done
+```
+// Minimum separation between us and next car in the lane (in m)
+#define MINIMUM_SEPARATION 30
+```
+
+6. "The car stays in its lane, except for the time between changing lanes.": yes ... for this part, lane changing is done atomically (i.e. whenever we decide to shift lanes, we do not think about lane shifting again except if we went to the new lane to avoid being in the middle between 2 lanes for a long time)
+```
+	// Check whether the car is in lane center or not.
+	// If it is not in lane center: it is shifting lanes
+	bool bIsShiftingLanes = true;
+	for (int i = 0; i < NUMBER_OF_LANES; i++)
+	{
+		if (abs(car_d - ((LANE_WIDTH / 2) + LANE_WIDTH * i)) < 1)
+		{
+			bIsShiftingLanes = false;
+			break;
+		}
+	}
+```
+
+7. "The car is able to change lanes": yes, refer to the logic done under the part `if (tooClose && !bIsShiftingLanes)`. Shifting is done when a front car is too close and in an adjacent lane, there is room in front and behind of our car
+```
+// Minimum separation between us and previous car in the lane (in m)
+#define MINIMUM_SEPARATION_BACK 20
+// Minimum separation between us and next car in a lane for shifting to be beneficial (in m)
+#define MINIMUM_SEPARATION_FRONT 45
+```
+
+8. "There is a reflection on how to generate paths.": path is generated according to the ReadMe video using the following steps:
+	a. Step 1: take last 2 points of previous path as reference points
+	b. Step 2: Get Fernet points for 3 points with 30 meters distance (s+30, s+60, s+90). Also, go to lane center.
+	c. Step 3: Shift the points to be in the car's coordinate system
+	d. Step 4: Use all remaining points from previous path
+	e. Step 5: Use spline to determine new points
+	f. Step 6: Determine spacing between points (as shown in PointsSpacing.PNG)
+	g. Step 7: Shift the points back to global coordinates
+	h. Step 8: Add them to next path points
