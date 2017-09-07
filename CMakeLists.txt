@@ -4,11 +4,15 @@ cmake_minimum_required (VERSION 3.5)
 
 add_definitions(-std=c++11)
 
-set(CXX_FLAGS "-Wall")
+set(CXX_FLAGS "-W1")
 set(CMAKE_CXX_FLAGS, "${CXX_FLAGS}")
+if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
+    set(sources src/main.cpp src/uWS/Extensions.cpp src/uWS/Group.cpp src/uWS/WebSocketImpl.cpp src/uWS/Networking.cpp src/uWS/Hub.cpp src/uWS/Node.cpp src/uWS/WebSocket.cpp src/uWS/HTTPSocket.cpp src/uWS/Socket.cpp src/uWS/uUV.cpp)
+    set_source_files_properties(${sources} PROPERTIES COMPILE_FLAGS "-D_USE_MATH_DEFINES")
 
-set(sources src/main.cpp)
-
+else(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
+    set(sources src/main.cpp)
+endif(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
 
 if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin") 
 
@@ -22,5 +26,6 @@ endif(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
 
 
 add_executable(path_planning ${sources})
-
-target_link_libraries(path_planning z ssl uv uWS)
+if(NOT ${CMAKE_SYSTEM_NAME} MATCHES "Windows")
+	target_link_libraries(path_planning z ssl uv uWS)
+endif(NOT ${CMAKE_SYSTEM_NAME} MATCHES "Windows")
