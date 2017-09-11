@@ -1,5 +1,7 @@
 #define _USE_MATH_DEFINES // Needed for include of math.h
 #include <math.h>
+#include <stdlib.h>
+using namespace std;
 #include "Helpers.h"
 
 constexpr double pi() { return M_PI; }
